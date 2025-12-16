@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V3.1 Dynamic Portfolio Generator</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-primary: #4f46e5;
+            --brand-secondary: #818cf8;
+            --brand-dark: #1e1b4b;
+            --brand-light: #eef2ff;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            color: #1f2937;
+            padding-bottom: 100px;
+        }
+
+        /* --- Generator UI Styling --- */
+        .hero-header {
+            background: var(--brand-dark);
+            color: white;
+            padding: 4rem 0 6rem;
+            position: relative;
+            overflow: hidden;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+        }
+
+        .form-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            margin-top: -3rem;
+            padding: 2rem;
+        }
+
+        .section-header {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--brand-primary);
+            border-bottom: 2px solid var(--brand-light);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Custom Upload Box */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        .upload-zone:hover { border-color: var(--brand-primary); background: #eef2ff; }
+        .preview-img { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; margin-top: 1rem; }
+
+        /* Dynamic Item Tags */
+        .item-tag {
+            background: var(--brand-primary);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            margin: 0.2rem;
+            animation: popIn 0.3s ease;
+        }
+
+        /* Dynamic Project Card in Generator */
+        .project-entry {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .btn-remove-project {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #ef4444;
+            background: #fee2e2;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-remove-project:hover { background: #ef4444; color: white; transform: rotate(90deg); }
+
+        /* Export Button */
+        .btn-export {
+            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+            color: white;
+            padding: 1rem 3rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 50px;
+            border: none;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-export:hover { transform: translateY(-3px); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <header class="hero-header text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Portfolio Generator V3.1</h1>
+            <p class="lead opacity-75">Dynamic Projects & Languages Edition</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <form id="portfolioForm" class="form-card">
+                    
+                    <div class="mb-5">
+                        <h3 class="section-header"><i class="bi bi-person-vcard"></i> Identity</h3>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" placeholder="e.g. Sarah Connor" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tagline</label>
+                                <input type="text" class="form-control" id="tagline" placeholder="e.g. Full Stack Developer" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Bio</label>
+                                <textarea class="form-control" id="bio" rows="3" placeholder="Short professional bio..." required></textarea>
+                            </div>
+                            <div class="col-md-4"><label class="form-label fw-bold">Email</label><input type="email" class="form-control" id="email"></div>
+                            <div class="col-md-4"><label class="form-label fw-bold">Phone</label><input type="tel" class="form-control" id="phone"></div>
+                            <div class="col-md-4"><label class="form-label fw-bold">Location</label><input type="text" class="form-control" id="location"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">GitHub URL</label><input type="url" class="form-control" id="github"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">LinkedIn URL</label><input type="url" class="form-control" id="linkedin"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="section-header"><i class="bi bi-images"></i> Images</h3>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Profile Photo</label>
+                                <div class="upload-zone" onclick="document.getElementById('profileImg').click()">
+                                    <p class="mb-0">Upload Profile Pic</p>
+                                    <div id="profilePreview"></div>
+                                </div>
+                                <input type="file" id="profileImg" accept="image/*" hidden>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Banner Image</label>
+                                <div class="upload-zone" onclick="document.getElementById('bannerImg').click()">
+                                    <p class="mb-0">Upload Banner</p>
+                                    <div id="bannerPreview"></div>
+                                </div>
+                                <input type="file" id="bannerImg" accept="image/*" hidden>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="section-header"><i class="bi bi-translate"></i> Skills & Languages</h3>
+                        
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold">Technical Skill</label>
+                                <input type="text" class="form-control" id="skillInput" placeholder="e.g. Python">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Level</label>
+                                <select class="form-select" id="skillRating">
+                                    <option value="5">Expert (5/5)</option>
+                                    <option value="4">Advanced (4/5)</option>
+                                    <option value="3">Intermediate (3/5)</option>
+                                    <option value="2">Beginner (2/5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-primary w-100" onclick="addSkill()">Add Skill</button>
+                            </div>
+                        </div>
+                        <div id="skillsList" class="mb-4"></div>
+
+                        <div class="row g-2 align-items-end mb-3 border-top pt-3">
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold text-success">Spoken Language</label>
+                                <input type="text" class="form-control" id="langInput" placeholder="e.g. French">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-success">Proficiency</label>
+                                <select class="form-select" id="langRating">
+                                    <option value="Native">Native / Bilingual</option>
+                                    <option value="Fluent">Fluent</option>
+                                    <option value="Conversational">Conversational</option>
+                                    <option value="Beginner">Beginner</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-success w-100" onclick="addLanguage()">Add Lang</button>
+                            </div>
+                        </div>
+                        <div id="langList" class="mb-4"></div>
+                    </div>
+
+                    <div class="mb-5">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                            <h3 class="section-header mb-0 border-0"><i class="bi bi-folder-plus"></i> Projects</h3>
+                            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" onclick="addProjectField()">
+                                <i class="bi bi-plus-lg"></i> Add New Project
+                            </button>
+                        </div>
+                        <p class="text-muted small">Add as many projects as you need. Images are optional.</p>
+                        
+                        <div id="projectsContainer">
+                            </div>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <button type="button" onclick="generatePortfolio()" class="btn btn-export">
+                            <i class="bi bi-download me-2"></i> Export Website
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let skills = [];
+        let languages = [];
+        let profileBase64 = '';
+        let bannerBase64 = '';
+        
+        // --- Helper: File to Base64 ---
+        const fileToBase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        // --- Image Listeners ---
+        document.getElementById('profileImg').addEventListener('change', async (e) => {
+            if(e.target.files[0]) {
+                profileBase64 = await fileToBase64(e.target.files[0]);
+                document.getElementById('profilePreview').innerHTML = `<img src="${profileBase64}" class="preview-img">`;
+            }
+        });
+        document.getElementById('bannerImg').addEventListener('change', async (e) => {
+            if(e.target.files[0]) {
+                bannerBase64 = await fileToBase64(e.target.files[0]);
+                document.getElementById('bannerPreview').innerHTML = `<img src="${bannerBase64}" class="preview-img" style="border-radius:8px; width:150px;">`;
+            }
+        });
+
+        // --- Skills Logic ---
+        function addSkill() {
+            const name = document.getElementById('skillInput').value;
+            const rating = document.getElementById('skillRating').value;
+            if(name) {
+                skills.push({ name, rating });
+                renderSkills();
+                document.getElementById('skillInput').value = '';
+            }
+        }
+        function renderSkills() {
+            const container = document.getElementById('skillsList');
+            container.innerHTML = skills.map((s, i) => `
+                <span class="item-tag">
+                    ${s.name} (${s.rating}/5) <i class="bi bi-x-circle-fill ms-1" onclick="skills.splice(${i}, 1); renderSkills()"></i>
+                </span>
+            `).join('');
+        }
+
+        // --- Languages Logic (NEW) ---
+        function addLanguage() {
+            const name = document.getElementById('langInput').value;
+            const level = document.getElementById('langRating').value;
+            if(name) {
+                languages.push({ name, level });
+                renderLanguages();
+                document.getElementById('langInput').value = '';
+            }
+        }
+        function renderLanguages() {
+            const container = document.getElementById('langList');
+            container.innerHTML = languages.map((l, i) => `
+                <span class="item-tag bg-success">
+                    ${l.name} - ${l.level} <i class="bi bi-x-circle-fill ms-1" onclick="languages.splice(${i}, 1); renderLanguages()"></i>
+                </span>
+            `).join('');
+        }
+
+        // --- Dynamic Projects Logic (NEW) ---
+        let projectCount = 0;
+
+        function addProjectField() {
+            projectCount++;
+            const container = document.getElementById('projectsContainer');
+            const div = document.createElement('div');
+            div.className = 'project-entry';
+            div.id = `proj_entry_${projectCount}`;
+            div.innerHTML = `
+                <button type="button" class="btn-remove-project" onclick="removeProject(${projectCount})"><i class="bi bi-trash"></i></button>
+                <h5 class="fw-bold text-primary mb-3">Project #${projectCount}</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Project Title</label>
+                        <input type="text" class="form-control project-title" placeholder="e.g. E-Commerce App">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea class="form-control project-desc" rows="2" placeholder="Describe the project..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Screenshots</label>
+                        <input type="file" class="form-control project-imgs" accept="image/*" multiple>
+                        <div class="form-text">Select multiple images if needed.</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeProject(id) {
+            const entry = document.getElementById(`proj_entry_${id}`);
+            if(entry) entry.remove();
+        }
+
+        // Initialize with one project field
+        addProjectField();
+
+
+        // --- GENERATE & EXPORT ---
+        async function generatePortfolio() {
+            const btn = document.querySelector('.btn-export');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Processing Images...';
+            btn.disabled = true;
+
+            // 1. Gather Basic Info
+            const basicInfo = {
+                name: document.getElementById('fullName').value || 'Portfolio',
+                tagline: document.getElementById('tagline').value,
+                bio: document.getElementById('bio').value,
+                location: document.getElementById('location').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                github: document.getElementById('github').value,
+                linkedin: document.getElementById('linkedin').value
+            };
+
+            // 2. Process Dynamic Projects
+            const projectEntries = document.querySelectorAll('.project-entry');
+            const projectsData = [];
+
+            for (let entry of projectEntries) {
+                const title = entry.querySelector('.project-title').value;
+                const desc = entry.querySelector('.project-desc').value;
+                const fileInput = entry.querySelector('.project-imgs');
+                
+                if (title) { // Only add if title exists
+                    let images = [];
+                    if (fileInput.files.length > 0) {
+                        for (let file of fileInput.files) {
+                            const b64 = await fileToBase64(file);
+                            images.push(b64);
+                        }
+                    }
+                    projectsData.push({ title, desc, images });
+                }
+            }
+
+            // 3. Generate HTML Content
+            // ----------------------------------------------------
+            
+            // Build Skills HTML
+            const skillsHTML = skills.map(s => `
+                <div class="skill-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">${s.name}</span>
+                        <span class="text-primary">${'★'.repeat(s.rating)}<span class="text-muted">${'★'.repeat(5-s.rating)}</span></span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: ${(s.rating/5)*100}%; background: var(--primary);"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Build Languages HTML
+            const languagesHTML = languages.map(l => `
+                <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+                    <span class="fw-bold"><i class="bi bi-chat-quote me-2 text-secondary"></i>${l.name}</span>
+                    <span class="badge bg-secondary rounded-pill">${l.level}</span>
+                </div>
+            `).join('');
+
+            // Build Projects HTML
+            let projectsHTML = '';
+            if (projectsData.length === 0) {
+                projectsHTML = `<div class="col-12 text-center text-muted">No projects added yet.</div>`;
+            } else {
+                projectsData.forEach((p, idx) => {
+                    // Carousel Logic
+                    let carouselHTML = '';
+                    if (p.images.length > 0) {
+                        const indicators = p.images.map((_, i) => `<button type="button" data-bs-target="#carousel${idx}" data-bs-slide-to="${i}" class="${i===0?'active':''}"></button>`).join('');
+                        const items = p.images.map((img, i) => `<div class="carousel-item ${i===0?'active':''}"><img src="${img}" class="d-block w-100" style="height:250px; object-fit:cover;"></div>`).join('');
+                        carouselHTML = `
+                            <div id="carousel${idx}" class="carousel slide mb-3 rounded overflow-hidden" data-bs-ride="carousel">
+                                <div class="carousel-indicators">${indicators}</div>
+                                <div class="carousel-inner">${items}</div>
+                                ${p.images.length > 1 ? `
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carousel${idx}" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carousel${idx}" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>` : ''}
+                            </div>`;
+                    } else {
+                        carouselHTML = `<div class="bg-light rounded d-flex align-items-center justify-content-center mb-3 text-muted" style="height:200px;"><i class="bi bi-image fs-1"></i></div>`;
+                    }
+
+                    projectsHTML += `
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm border-0 hover-up">
+                            <div class="card-body">
+                                ${carouselHTML}
+                                <h4 class="card-title fw-bold">${p.title}</h4>
+                                <p class="card-text text-secondary">${p.desc}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // FULL HTML TEMPLATE
+            const finalHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${basicInfo.name} - Portfolio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --dark: #0f172a; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; color: #334155; }
+        h1,h2,h3,h4 { font-family: 'Outfit', sans-serif; }
+        
+        /* Hero */
+        .hero { 
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url('${bannerBase64}') center/cover fixed; 
+            color: white; padding: 100px 0; clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+        }
+        .profile-img { width: 160px; height: 160px; border-radius: 50%; border: 5px solid white; object-fit: cover; }
+        
+        /* General */
+        .hover-up { transition: transform 0.3s; }
+        .hover-up:hover { transform: translateY(-10px); }
+        .section-title { position: relative; display: inline-block; margin-bottom: 2rem; color: var(--dark); font-weight: 700; }
+        .section-title::after { content: ''; display: block; width: 60px; height: 4px; background: var(--primary); margin-top: 5px; }
+        
+        .contact-btn { width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary); color: white; text-decoration: none; transition: 0.3s; }
+        .contact-btn:hover { background: var(--dark); color: white; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    
+    <header class="hero text-center">
+        <div class="container">
+            ${profileBase64 ? `<img src="${profileBase64}" class="profile-img mb-4 shadow">` : ''}
+            <h1 class="display-3 fw-bold">${basicInfo.name}</h1>
+            <p class="lead text-light opacity-75 mb-4">${basicInfo.tagline}</p>
+            <div class="d-flex justify-content-center gap-3">
+                ${basicInfo.github ? `<a href="${basicInfo.github}" class="btn btn-outline-light rounded-pill">GitHub</a>` : ''}
+                ${basicInfo.linkedin ? `<a href="${basicInfo.linkedin}" class="btn btn-primary rounded-pill">LinkedIn</a>` : ''}
+            </div>
+        </div>
+    </header>
+
+    <div class="container py-5">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="bg-light p-4 rounded-4 shadow-sm h-100">
+                    <h4 class="fw-bold mb-3">About Me</h4>
+                    <p class="text-secondary">${basicInfo.bio}</p>
+                    <div class="mb-3 text-muted small"><i class="bi bi-geo-alt-fill me-1"></i> ${basicInfo.location || 'Remote'}</div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5 class="fw-bold mb-3">Skills</h5>
+                    ${skillsHTML}
+
+                    ${languages.length > 0 ? `
+                        <hr class="my-4">
+                        <h5 class="fw-bold mb-3">Languages</h5>
+                        ${languagesHTML}
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <h2 class="section-title">My Projects</h2>
+                <div class="row">
+                    ${projectsHTML}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-5 text-center mt-5">
+        <div class="container">
+            <h2 class="text-white mb-4">Get In Touch</h2>
+            <div class="d-flex justify-content-center gap-3 mb-4">
+                ${basicInfo.email ? `<a href="mailto:${basicInfo.email}" class="contact-btn"><i class="bi bi-envelope fs-4"></i></a>` : ''}
+                ${basicInfo.phone ? `<a href="tel:${basicInfo.phone}" class="contact-btn"><i class="bi bi-telephone fs-4"></i></a>` : ''}
+            </div>
+            <small class="opacity-50">&copy; ${new Date().getFullYear()} ${basicInfo.name}. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"><\/script>
+</body>
+</html>`;
+
+            // 4. Download
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'portfolio.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Reset Button
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
